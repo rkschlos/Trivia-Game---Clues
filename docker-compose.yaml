@@ -1,0 +1,29 @@
+volumes:
+  trivia-game:
+    external: true
+services:
+  api:
+    build:
+      context: api
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app
+    environment:
+      PGHOST: db
+      PGDATABASE: trivia-game
+      PGUSER: trivia-game
+      PGPASSWORD: trivia-game
+  db:
+    build:
+      context: data
+      dockerfile: Dockerfile.dev
+    volumes:
+      - trivia-game:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: trivia-game
+      POSTGRES_USER: trivia-game
+      POSTGRES_DB: trivia-game
+    ports:
+      - "15432:5432"
