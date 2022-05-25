@@ -15,11 +15,16 @@ class CategoryOut(BaseModel):
     id: int
     title: str
     canon: bool
+    # you don't need ALL the fields, but if it is listed
+    # it must be included below or it will complain
+
+class CategoryWithClueCount(CategoryOut):
+    num_clues: int
 
 
 class Categories(BaseModel):
     page_count: int
-    categories: list[CategoryOut]
+    categories: list[CategoryWithClueCount]
 
 
 class Message(BaseModel):
@@ -36,9 +41,11 @@ def categories_list(page: int = 0):
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT id, title, canon
-                FROM categories
-                ORDER BY title
+                SELECT cats.id, cats.title, cats.canon, count(*) AS num_clues
+                FROM categories AS cats
+                LEFT OUTER JOIN clues on (clues.category_id = cats.id)
+                group by cats.id, cats.title, cats.canon
+                ORDER BY cats.title
                 LIMIT 100 OFFSET %s
             """,
                 [page * 100],
