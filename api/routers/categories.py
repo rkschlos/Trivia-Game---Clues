@@ -26,7 +26,8 @@ class Message(BaseModel):
     message: str
 
 
-@router.get("/api/categories", response_model=Categories)
+#list
+@router.get("/api/categories/{page}", response_model=Categories)
 def categories_list(page: int = 0):
     # Uses the environment variables to connect
     # In development, see the docker-compose.yml file for
@@ -56,13 +57,15 @@ def categories_list(page: int = 0):
             """
             )
             raw_count = cur.fetchone()[0]
+            print(raw_count)
             page_count = (raw_count // 100) + 1
 
             return Categories(page_count=page_count, categories=results)
+            
 
-
+#getdetail
 @router.get(
-    "/api/categories/{category_id}",
+    "/api/category/{category_id}",
     response_model=CategoryOut,
     responses={404: {"model": Message}},
 )
