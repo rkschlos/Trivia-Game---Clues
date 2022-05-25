@@ -45,6 +45,10 @@ def clues_list(page: int = 0):
             """, 
                 [page * 100],
             )
+            #the way this is done in categories will not work here
+            # here we are dealing with multiple tables
+            # and the logic would get messed up when using that
+            #automated index
             results = []
             for row in cur.fetchall():
                 record = {
@@ -74,39 +78,43 @@ def clues_list(page: int = 0):
 
 #get detail
 
-# @router.get(
-#     "/api/random-clue/{clue_id}",
-#     response_model=ClueOut,
-#     responses={404: {"model": Message}},
-# )
-# def get_clue(clue_id: int, response: Response):
-#     with psycopg.connect("postgresql://trivia-game:trivia-game@db/trivia-game") as conn:
-#         with conn.cursor() as cur:
-#             cur.execute(
-#                 f"""
-#                 SELECT clues.id, clues.answer, clues.question,
-#                         clues.value, clues.invalid_count, 
-#                         categories.id, categories.title, categories.canon,
-#                         clues.canon
-#                 FROM categories
-#                     INNER JOIN clues
-#                     ON (clues.category_id = categories.id)
-#                 WHERE clues.id = %s
-#             """,
-#                 [clue_id],
-#             )
-#             row = cur.fetchone()
-#             print("row is", row)
-#             if row is None:
-#                 response.status_code = status.HTTP_404_NOT_FOUND
-#                 return {"message": "Category not found"}
-#             record = {}
-#             for i, column in enumerate(cur.description):
-#                 record[column.name] = row[i]
-#             return record
+@router.get(
+    "/api/clue/{clue_id}",
+    response_model=ClueOut,
+    responses={404: {"model": Message}},
+)
+def get_clue(clue_id: int, response: Response):
+    with psycopg.connect() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                f"""
+                SELECT categories.id, categories.title, categories.canon,
+                        clues.id, clues.question, clues.answer,
+                        clues.value, clues.invalid_count, 
+                        clues.canon
+                FROM categories
+                    INNER JOIN clues
+                    ON (clues.category_id = categories.id)
+                WHERE clues.id = %s
+            """,
+                [clue_id],
+            )
+            row = cur.fetchone()
+            if row is None:
+                response.status_code = status.HTTP_404_NOT_FOUND
+                return {"message": "Category not found"}
+            record = {
+                "id": row[3],
+                "question": row[4],
+                "answer": row[5],
+                "value": row[6],
+                "invalid_count": row[7],
+                "canon": row[8],
+                "category": {
+                    "id": row[0],
+                    "title": row[1],
+                    "canon": row[2],
+                }
+            }
+            return record
 
-
-            # row = cur.fetchone()
-            # return {
-            #     "id": row[3],
-            # }
