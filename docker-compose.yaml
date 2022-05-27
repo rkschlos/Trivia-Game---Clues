@@ -1,6 +1,12 @@
 volumes:
   trivia-game:
     external: true
+  pg-admin:
+    external: true
+  mongo-db:
+    external: true
+  transfer:
+    external: true
 services:
   api:
     build:
@@ -15,21 +21,49 @@ services:
       PGDATABASE: trivia-game
       PGUSER: trivia-game
       PGPASSWORD: trivia-game
-      # MONGOHOST: mongo
-      # MONGODATABASE: trivia-game
-      # MONGOUSER: trivia-game
-      # MONGOPASSWORD: trivia-game
+      MONGOHOST: mongo
+      MONGODATABASE: trivia-game
+      MONGOUSER: trivia-game
+      MONGOPASSWORD: trivia-game
   db:
     build:
       context: data
       dockerfile: Dockerfile.dev
     volumes:
       - trivia-game:/var/lib/postgresql/data
+      - transfer:/transfer
     environment:
       POSTGRES_PASSWORD: trivia-game
       POSTGRES_USER: trivia-game
       POSTGRES_DB: trivia-game
     ports:
       - "15432:5432"
-  # mongo:
-  # pgadmin:
+  pg-admin:
+    image: dpage/pgadmin4
+    volumes:
+      - pg-admin:/var/lib/pgadmin
+    ports:
+      - "8082:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: rachael.schlosberg@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: password
+      PGADMIN_DISABLE_POSTFIX: 1
+  mongo:
+    image: mongo:5
+    volumes:
+      - mongo-db:/data/db
+      - ./data:/docker-entrypoint-initdb.d
+      - transfer:/transfer:ro
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: trivia-game
+      MONGO_INITDB_ROOT_PASSWORD: trivia-game
+  mongo-express:
+    image: mongo-express:latest
+    depends_on:
+      - mongo
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: trivia-game
+      ME_CONFIG_MONGODB_ADMINPASSWORD: trivia-game
+      ME_CONFIG_MONGODB_URL: mongodb://trivia-game:trivia-game@mongo:27017/

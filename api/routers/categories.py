@@ -1,12 +1,16 @@
 from fastapi import APIRouter, Response, status
 from pydantic import BaseModel
 import psycopg
-#import pymongo
-#import os
+import pymongo
+import os
+import bson
 
-# dbname = os.environ[MONGOHOST']
-# fill out the rest
-# mongo_stri = f"mongodb://{dbuser}:{dbpass}@{dbhost}"
+dbhost = os.environ['MONGOHOST']
+dbname = os.environ['MONGODATABASE']
+dbuser = os.environ['MONGOUSER']
+dbpass - os.environ['MONGOPASSWORD']
+
+mongo_str = f"mongodb://{dbuser}:{dbpass}@{dbhost}"
 
 # Using routers for organization
 # See https://fastapi.tiangolo.com/tutorial/bigger-applications/
