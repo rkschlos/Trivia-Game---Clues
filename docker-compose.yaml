@@ -15,6 +15,10 @@ services:
       PGDATABASE: trivia-game
       PGUSER: trivia-game
       PGPASSWORD: trivia-game
+      # MONGOHOST: mongo
+      # MONGODATABASE: trivia-game
+      # MONGOUSER: trivia-game
+      # MONGOPASSWORD: trivia-game
   db:
     build:
       context: data
@@ -27,3 +31,5 @@ services:
       POSTGRES_DB: trivia-game
     ports:
       - "15432:5432"
+  # mongo:
+  # pgadmin:

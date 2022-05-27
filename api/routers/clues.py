@@ -6,8 +6,9 @@ from .categories import CategoryOut
 router = APIRouter()
 
 class ClueIn(BaseModel):
-    answer: str
     question: str
+    answer: str
+
 
 class ClueOut(BaseModel):
     id: int
@@ -83,7 +84,7 @@ def clues_list(page: int = 0):
     response_model=ClueOut,
     responses={404: {"model": Message}},
 )
-def get_clue(clue_id: int, response: Response):
+def get_clue(clue_id: int, response:Response):
     with psycopg.connect() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -117,4 +118,105 @@ def get_clue(clue_id: int, response: Response):
                 }
             }
             return record
+
+
+
+
+@router.get(
+    "/api/random-clue",
+    response_model= ClueOut,
+    responses={404: {"model": Message}},
+)
+def random_clue(response: Response, valid: bool = True):
+    with psycopg.connect() as conn:
+        with conn.cursor() as cur:
+            invalid_case = " "
+            if valid: 
+                invalid_case = " WHERE clues.invalid_count = 0 "
+            cur.execute(
+                f"""
+                SELECT categories.id, categories.title, categories.canon,
+                        clues.id, clues.question, clues.answer,
+                        clues.value, clues.invalid_count, 
+                        clues.canon
+                FROM categories
+                    INNER JOIN clues
+                    ON (clues.category_id = categories.id) 
+                    {invalid_case}
+                        ORDER BY RANDOM()
+                        LIMIT 1;
+            """,
+            #got rid of [ input ] because that can only insert a value!!!
+            # added formatted string, but 
+            )
+            row = cur.fetchone()
+            if row is None:
+                response.status_code = status.HTTP_404_NOT_FOUND
+                return {"message": "Category not found"}
+            record = {
+                "id": row[3],
+                "question": row[4],
+                "answer": row[5],
+                "value": row[6],
+                "invalid_count": row[7],
+                "canon": row[8],
+                "category": {
+                    "id": row[0],
+                    "title": row[1],
+                    "canon": row[2],
+                }
+            }
+            return record
+
+#Do not actually delete the clue!! 
+@router.delete(
+    "/api/clues/{clue_id}", 
+    response_model=ClueOut, 
+    responses={404: {"model": Message}},
+)
+def update_clue(clue_id: int, response: Response):
+    with psycopg.connect() as conn: 
+        with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    UPDATE clue
+                    SET invalid_count = invalid_count + 1,
+                    WHERE id = %s;
+                    """, 
+                        [clue_id],
+                )
+                cur.execute(
+                    f"""
+                    SELECT categories.id, categories.title, categories.canon,
+                        clues.id, clues.question, clues.answer,
+                        clues.value, clues.invalid_count, 
+                        clues.canon
+                    FROM categories
+                    INNER JOIN clues
+                    ON (clues.category_id = categories.id)
+                    WHERE clues.id = %s
+                """,
+                    [clue_id],
+                )
+                row = cur.fetchone()
+                if row is None:
+                    response.status_code = status.HTTP_404_NOT_FOUND
+                    return {"message": "Category not found"}
+                record = {
+                    "id": row[3],
+                    "question": row[4],
+                    "answer": row[5],
+                    "value": row[6],
+                    "invalid_count": row[7],
+                    "canon": row[8],
+                    "category": {
+                        "id": row[0],
+                        "title": row[1],
+                        "canon": row[2],
+                    }
+                }
+                return record
+
+        
+
 

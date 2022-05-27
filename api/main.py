@@ -1,5 +1,7 @@
 from fastapi import FastAPI
-from routers import categories, clues, games
+from routers import categories
+from routers import clues
+from routers import games
 
 
 app = FastAPI()

@@ -1,6 +1,12 @@
 from fastapi import APIRouter, Response, status
 from pydantic import BaseModel
 import psycopg
+#import pymongo
+#import os
+
+# dbname = os.environ[MONGOHOST']
+# fill out the rest
+# mongo_stri = f"mongodb://{dbuser}:{dbpass}@{dbhost}"
 
 # Using routers for organization
 # See https://fastapi.tiangolo.com/tutorial/bigger-applications/
@@ -68,6 +74,20 @@ def categories_list(page: int = 0):
             page_count = (raw_count // 100) + 1
 
             return Categories(page_count=page_count, categories=results)
+    ##___________________________________________
+
+    # client = pymongo.Mongo(mongo_str)
+    # db = client[dbname]
+    # print(db)   #print to check that there is a connection to mongodb
+    # categories = db.categories.find().sort('title', pymongo.ASCENDING).skip(page*100).limit(100)
+    #db.categories
+    
+
+    ## call it in insomnia with id# you want
+
+    #print(category) #to check
+    
+    ## look at localhost:8081/db/trivia-game/ to see mongo stuff
             
 
 #getdetail
@@ -95,6 +115,17 @@ def get_category(category_id: int, response: Response):
             for i, column in enumerate(cur.description):
                 record[column.name] = row[i]
             return record
+
+# __________________________________________
+
+    # client = pymongo.Mongo(mongo_str)
+    # db = client[dbname]
+    # print(db)   #print to check that there is a connection to mongodb
+    # category = db.categories.find_one({ "_id": category_id })
+    ## call it in insomnia with id# you want
+    #print(category) #to check
+    #return category
+    ## look at localhost:8081/db/trivia-game/ to see mongo stuff
 
 
 @router.post(
